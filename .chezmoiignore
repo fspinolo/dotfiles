@@ -1,3 +1,6 @@
+# Repo documentation — not a dotfile to write into $HOME.
+README.md
+
 # Secrets and machine-local state — never managed by chezmoi.
 # Re-auth manually on a new machine (gh auth login, aws configure, etc).
 .config/gh/hosts.yml
