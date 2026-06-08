@@ -1,0 +1,18 @@
+# Loancrate — single-app session under apps/<name> inside a task worktree
+# Start with the `dev <task> <appname>` zsh alias, which creates the
+# worktree and passes its path:
+#   tmuxinator start devapp <appname> task=<task> workdir=<worktree-path>
+name: dev-<%= @settings["task"] %>-<%= @args.first %>
+root: <%= @settings["workdir"] %>/apps/<%= @args.first %>
+
+# Top (main) pane gets 60% height; bottom gets the remaining 40%.
+on_project_start: tmux set-option -g main-pane-height 60%
+
+windows:
+  - code:
+      layout: main-horizontal
+      panes:
+        - vim
+        - claude
+  - shell:
+  - git: git status
