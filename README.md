@@ -37,8 +37,8 @@ Three mechanisms, smallest to biggest hammer:
    like `machine` and `email`. Nothing secret, never committed.
 
 2. **Templates** (`*.tmpl`) substitute those values into file content.
-   `dot_gitconfig.tmpl` pulls the git email from `{{ .email }}`, so each
-   machine gets its own identity from one shared source file.
+   `.config/git/identity.tmpl` pulls the git email from `{{ .email }}`,
+   so each machine gets its own identity from one shared source file.
 
 3. **`.chezmoiignore`** (itself a template) drops whole files on machines
    where they don't belong. Work-only files (`tmuxinator/`,
@@ -51,6 +51,29 @@ portable as-is.
 
 `dot_zshrc` stays universal and ends with a conditional
 `source ~/.config/zsh/work.zsh` — present only on work machines.
+
+## Git config
+
+`~/.gitconfig` is split so the `git config --global` CLI keeps working:
+
+- **`~/.gitconfig`** (source `dot_gitconfig`) — a **plain** file (not a
+  template). `[include]`s the identity file and holds shared settings.
+  This is where `git config --global ...` writes land.
+- **`~/.config/git/identity`** (source `identity.tmpl`) — the **template**
+  with the per-machine `[user] email = {{ .email }}`.
+
+Workflow:
+
+```sh
+git config --global core.editor vim   # standard syntax — writes ~/.gitconfig
+chezmoi re-add                          # capture it into the source repo
+```
+
+`chezmoi re-add` updates the plain `~/.gitconfig` but **skips the
+template**, so the `{{ .email }}` is never clobbered. Don't set
+`user.email` / `user.name` via the CLI — those belong in the template
+(`chezmoi edit ~/.config/git/identity`). Repo-local `git config` (no
+`--global`) is unmanaged and unaffected.
 
 ## Vim plugins
 
