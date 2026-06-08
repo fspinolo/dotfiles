@@ -19,6 +19,16 @@ On first run you'll be prompted for:
 Answers are stored in `~/.config/chezmoi/chezmoi.toml`, which is **not**
 part of the repo — it's the one per-machine file you keep local.
 
+Then install Homebrew packages:
+
+```sh
+brew bundle install --global    # reads ~/.Brewfile
+```
+
+`chezmoi apply` also clones the vim plugins and builds YouCompleteMe
+(see below) — for YCM that needs `cmake` + `python`, which the Brewfile
+provides, so run `brew bundle install` first.
+
 ## How the machine split works
 
 Three mechanisms, smallest to biggest hammer:
@@ -41,6 +51,39 @@ portable as-is.
 
 `dot_zshrc` stays universal and ends with a conditional
 `source ~/.config/zsh/work.zsh` — present only on work machines.
+
+## Vim plugins
+
+Vim 8+ native packages under `~/.vim/pack/vendor/start/`. Plugin code is
+**never** committed here — only the declaration of which plugins to fetch.
+
+- **nerdtree** and **fzf.vim** — declared in `.chezmoiexternal.toml`;
+  chezmoi clones them on apply and pulls updates weekly (or on
+  `chezmoi apply --refresh-externals`). fzf.vim also needs the `fzf`
+  binary, which comes from the Brewfile.
+- **YouCompleteMe** — handled by `run_onchange_setup-vim.sh` because it
+  needs recursive submodules and a per-machine native build (its
+  compiled core is tied to the machine's Python version + CPU arch and
+  is not portable). The script clones + builds only when missing, so
+  it's a no-op once installed. Building needs `cmake` + `python` from
+  the Brewfile; trim `install.py --all` to specific completers if a
+  language toolchain is absent.
+
+The same script also creates `~/.vim/swap/` (the swapfile dir `.vimrc`
+expects).
+
+## Homebrew packages
+
+`~/.Brewfile` (source: `dot_Brewfile`) is a `brew bundle` manifest.
+
+```sh
+brew bundle install --global    # install everything in ~/.Brewfile
+brew bundle dump --global --force && chezmoi add ~/.Brewfile   # update it
+```
+
+It's a single shared list dumped from the work machine; `brew bundle
+install` is additive, so it's harmless on other machines. Split it per
+machine later (a template keyed on `.machine`) if the lists diverge.
 
 ## Secrets
 
