@@ -14,6 +14,6 @@ windows:
       layout: main-horizontal
       panes:
         - vim
-        - claude --permission-mode plan "Read ./.handoff.md for your full briefing on this task. Study the files and prior work it references, then present a concise plan. You are in plan mode: investigate freely but make no changes."
+        - 'claude --permission-mode plan "Read ./.handoff.md for your full briefing on this task. Study the files and prior work it references, then present a concise plan. You are in plan mode: investigate freely but make no changes."'
   - shell:
   - git: git status
