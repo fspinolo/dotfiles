@@ -72,3 +72,76 @@ dev() {
     return 1
   fi
 }
+
+# devbrief <task> <brief-file>   (or: devbrief <task> < brief.md)
+# Like `dev <task>`, but seeds the worktree with a handoff brief and
+# launches Claude told to read it first — for spinning off a scoped
+# follow-on task with full context carried over from another session.
+# The brief lands at <worktree>/.handoff.md (kept out of git status via
+# the repo's local info/exclude).
+devbrief() {
+  local repo_dir="$HOME/Development/loancrate"
+  local worktrees_dir="$HOME/Development/loancrate-worktrees"
+  local task="$1"
+  if [[ -z "$task" ]]; then
+    echo "usage: devbrief <task> <brief-file>  (or pipe the brief on stdin)" >&2
+    return 1
+  fi
+  local workdir="$worktrees_dir/$task"
+  lc-worktree "$task" || return 1
+  local brief="$workdir/.handoff.md"
+  if [[ -n "$2" ]]; then
+    if [[ ! -f "$2" ]]; then
+      echo "devbrief: brief file not found: $2" >&2
+      return 1
+    fi
+    cp "$2" "$brief"
+  elif [[ ! -t 0 ]]; then
+    cat > "$brief"
+  else
+    echo "devbrief: provide a brief file or pipe one on stdin" >&2
+    return 1
+  fi
+  local exclude="$repo_dir/.git/info/exclude"
+  if [[ -f "$exclude" ]] && ! grep -qxF '.handoff.md' "$exclude"; then
+    echo '.handoff.md' >> "$exclude"
+  fi
+  # The session runs Claude in plan mode (see devbrief.yml), which blocks
+  # all file edits. Pre-approve mundane read-only commands so a background
+  # planning session doesn't stall on permission prompts. Only written if
+  # the worktree has no local settings yet, to avoid clobbering.
+  local claude_local="$workdir/.claude/settings.local.json"
+  if [[ ! -f "$claude_local" ]]; then
+    mkdir -p "$workdir/.claude"
+    cat > "$claude_local" <<'JSON'
+{
+  "permissions": {
+    "allow": [
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git remote:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh api:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)"
+    ]
+  }
+}
+JSON
+  fi
+  echo "devbrief: wrote handoff brief to $brief"
+  tmuxinator start devbrief task="$task" workdir="$workdir"
+}
