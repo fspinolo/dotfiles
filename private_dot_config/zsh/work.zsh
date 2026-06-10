@@ -44,13 +44,23 @@ dev() {
       echo "dev: removed worktree $workdir"
     fi
     if git -C "$repo_dir" show-ref --verify --quiet "refs/heads/$branch"; then
-      git -C "$repo_dir" branch -d "$branch" 2>/dev/null && {
+      if git -C "$repo_dir" branch -d "$branch" 2>/dev/null; then
         echo "dev: deleted branch $branch"
-      } || {
-        echo "dev: branch $branch not fully merged (normal with squash" >&2
-        echo "merges); if its PR is merged/abandoned, run:" >&2
-        echo "  git -C $repo_dir branch -D $branch" >&2
-      }
+      else
+        # branch -d refuses squash-merged branches, so trust the PR
+        # state instead: a merged PR means the work is on master.
+        local pr_state
+        pr_state=$(cd "$repo_dir" && gh pr view "$branch" \
+          --json state --jq .state 2>/dev/null)
+        if [[ "$pr_state" == "MERGED" ]]; then
+          git -C "$repo_dir" branch -D "$branch" >/dev/null
+          echo "dev: deleted branch $branch (its PR is merged)"
+        else
+          echo "dev: branch $branch not fully merged" \
+            "(PR state: ${pr_state:-no PR found}); to discard it run:" >&2
+          echo "  git -C $repo_dir branch -D $branch" >&2
+        fi
+      fi
     fi
     return 0
   fi

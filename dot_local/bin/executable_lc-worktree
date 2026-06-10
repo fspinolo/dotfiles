@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+# Idempotently create/prepare a Loancrate git worktree for a task.
+# Usage: lc-worktree <task-name>
+#   - worktree at  ~/Development/loancrate-worktrees/<task-name>
+#   - branch       felipe/<task-name> (reused if it already exists,
+#     locally or on origin; otherwise created from origin/master)
+#   - fetches origin (with prune) before creating, so new branches
+#     start from the latest master; an existing branch with no commits
+#     of its own is fast-forwarded to origin/master, one with unique
+#     commits is reused as-is with an ahead/behind warning
+#   - copies gitignored .env files from the main checkout
+#   - runs pnpm install if node_modules is missing
+set -euo pipefail
+
+REPO_DIR="$HOME/Development/loancrate"
+WORKTREES_DIR="$HOME/Development/loancrate-worktrees"
+
+task="${1:?usage: lc-worktree <task-name>}"
+worktree_dir="$WORKTREES_DIR/$task"
+
+if [[ "$task" == */* ]]; then
+  branch="$task"
+else
+  branch="felipe/$task"
+fi
+
+if [[ ! -d "$worktree_dir" ]]; then
+  mkdir -p "$WORKTREES_DIR"
+  # Refresh refs before deciding what to base the worktree on, so new
+  # branches start from the latest master and branches deleted on
+  # origin don't match stale remote refs. On fetch failure (e.g.
+  # offline) fall back to local refs, but say so loudly.
+  if ! git -C "$REPO_DIR" fetch --prune --quiet origin; then
+    echo "lc-worktree: WARNING: fetch failed; using local refs" >&2
+    echo "lc-worktree: origin/master last updated" \
+      "$(git -C "$REPO_DIR" log -1 --format=%cr origin/master)" >&2
+  fi
+  if git -C "$REPO_DIR" show-ref --verify --quiet "refs/heads/$branch"; then
+    if git -C "$REPO_DIR" merge-base --is-ancestor \
+      "$branch" origin/master; then
+      # The branch has no commits of its own, so moving it to the
+      # latest master loses nothing.
+      if [[ "$(git -C "$REPO_DIR" rev-parse "$branch")" != \
+        "$(git -C "$REPO_DIR" rev-parse origin/master)" ]]; then
+        echo "lc-worktree: fast-forwarding $branch to origin/master"
+        git -C "$REPO_DIR" branch --force --no-track "$branch" origin/master
+      fi
+    else
+      read -r behind ahead < <(git -C "$REPO_DIR" rev-list --left-right \
+        --count "origin/master...$branch")
+      echo "lc-worktree: WARNING: $branch is $ahead ahead," \
+        "$behind behind origin/master; rebase manually if needed" >&2
+    fi
+    echo "lc-worktree: adding worktree on existing branch $branch"
+    git -C "$REPO_DIR" worktree add "$worktree_dir" "$branch"
+  elif git -C "$REPO_DIR" show-ref --verify --quiet \
+    "refs/remotes/origin/$branch"; then
+    echo "lc-worktree: adding worktree tracking origin/$branch"
+    git -C "$REPO_DIR" worktree add --track -b "$branch" \
+      "$worktree_dir" "origin/$branch"
+  else
+    echo "lc-worktree: creating branch $branch from origin/master"
+    git -C "$REPO_DIR" worktree add -b "$branch" \
+      "$worktree_dir" origin/master
+  fi
+fi
+
+# Copy gitignored env files (e.g. apps/server/.env) from the main
+# checkout so the worktree is runnable without re-running setup.
+while IFS= read -r env_file; do
+  dest="$worktree_dir/$env_file"
+  if [[ ! -e "$dest" ]]; then
+    mkdir -p "$(dirname "$dest")"
+    cp "$REPO_DIR/$env_file" "$dest"
+    echo "lc-worktree: copied $env_file"
+  fi
+done < <(
+  git -C "$REPO_DIR" status --porcelain --ignored=matching |
+    sed -n 's/^!! //p' | grep -E '(^|/)\.env' || true
+)
+
+if [[ ! -d "$worktree_dir/node_modules" ]]; then
+  echo "lc-worktree: installing dependencies (first run in this worktree)"
+  (cd "$worktree_dir" && pnpm install)
+fi
+
+echo "lc-worktree: ready at $worktree_dir (branch $branch)"
