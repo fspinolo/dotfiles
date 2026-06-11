@@ -17,7 +17,7 @@ set cursorline
 " Keep swapfiles out of working directories (// encodes full path in name)
 set directory=~/.vim/swap//
 
-colorscheme desert
+colorscheme gruvbox
 
 " !-- NERDTree --!
 

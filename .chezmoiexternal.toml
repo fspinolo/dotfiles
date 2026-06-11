@@ -16,3 +16,8 @@
     type = "git-repo"
     url = "https://github.com/junegunn/fzf.vim.git"
     refreshPeriod = "168h"
+
+[".vim/pack/vendor/start/gruvbox"]
+    type = "git-repo"
+    url = "https://github.com/morhetz/gruvbox.git"
+    refreshPeriod = "168h"
