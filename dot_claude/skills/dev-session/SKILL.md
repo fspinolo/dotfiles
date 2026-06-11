@@ -8,10 +8,10 @@ description: Create a dev session (git worktree + tmux) for a task in the loancr
 Felipe works one task per git worktree at
 `~/Development/loancrate-worktrees/<task>` on branch `felipe/<task>`,
 with a tmux session named `dev-<task>`. The interactive entry points
-are the `dev`/`devbrief` zsh functions in `~/.config/zsh/work.zsh`;
-this skill replicates them non-interactively, plus the Linear and
-handoff-brief bookkeeping. Companion teardown skill:
-`clean-dev-sessions`.
+are the `dev`/`devbrief` zsh functions in `~/.config/zsh/dev-core.zsh`
+(loancrate-specific hooks in `~/.config/zsh/work.zsh`); this skill
+replicates them non-interactively, plus the Linear and handoff-brief
+bookkeeping. Companion teardown skill: `clean-dev-sessions`.
 
 ## 0. Gather inputs
 
@@ -66,13 +66,15 @@ session will just prompt) or ask Felipe to run
 
 ## 3. Start the tmux session
 
+All sessions use the single `dev` template (`~/.config/tmuxinator/dev.yml`):
+
 ```bash
 # brief-seeded (Claude pane boots in plan mode reading .handoff.md):
-tmuxinator start devbrief --no-attach task=<task> workdir=$HOME/Development/loancrate-worktrees/<task>
+tmuxinator start dev --no-attach session=dev-<task> workdir=$HOME/Development/loancrate-worktrees/<task> brief=1
 
 # plain:
-tmuxinator start devtree --no-attach task=<task> workdir=...
-# app/package-focused variants: devapp <app> / devpkg <pkg> templates
+tmuxinator start dev --no-attach session=dev-<task> workdir=...
+# app/package-focused: session=dev-<task>-<name> workdir=<worktree>/apps/<name>  (or packages/<name>)
 ```
 
 `--no-attach` is required from a non-tty. Verify with

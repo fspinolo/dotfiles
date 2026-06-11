@@ -118,6 +118,8 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export PATH="$HOME/.local/bin:$PATH"
 
-# Machine-specific shell config (e.g. work dev-session helpers).
-# Managed by chezmoi; only present on machines where it applies.
+# Dev-session helpers: shared core + machine-specific hooks.
+# Managed by chezmoi; the hook files are only present where they apply.
+[[ -f ~/.config/zsh/dev-core.zsh ]] && source ~/.config/zsh/dev-core.zsh
 [[ -f ~/.config/zsh/work.zsh ]] && source ~/.config/zsh/work.zsh
+[[ -f ~/.config/zsh/dev-personal.zsh ]] && source ~/.config/zsh/dev-personal.zsh

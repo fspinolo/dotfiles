@@ -13,9 +13,13 @@ README.md
 # Work-only files: applied only when machine == "work".
 # Still committed to the repo (backed up), just not written out elsewhere.
 {{ if ne .machine "work" }}
-.config/tmuxinator
 .config/zsh/work.zsh
 .claude/skills/clean-dev-sessions
 .claude/skills/dev-session
 .claude/skills/weekly-update
+{{ end }}
+
+# Personal-only files (the dev-session hooks would collide with work.zsh's).
+{{ if eq .machine "work" }}
+.config/zsh/dev-personal.zsh
 {{ end }}
