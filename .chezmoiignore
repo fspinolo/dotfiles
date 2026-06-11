@@ -16,4 +16,6 @@ README.md
 .config/tmuxinator
 .config/zsh/work.zsh
 .claude/skills/clean-dev-sessions
+.claude/skills/dev-session
+.claude/skills/weekly-update
 {{ end }}
