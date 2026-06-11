@@ -15,4 +15,5 @@ README.md
 {{ if ne .machine "work" }}
 .config/tmuxinator
 .config/zsh/work.zsh
+.claude/skills/clean-dev-sessions
 {{ end }}
