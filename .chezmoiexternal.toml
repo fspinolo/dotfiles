@@ -1,0 +1,23 @@
+# Vim native-package plugins, cloned/updated by chezmoi.
+# Plugin code stays out of this repo; chezmoi clones it on apply and
+# pulls updates on `chezmoi apply --refresh-externals` (or after the
+# refreshPeriod elapses). Use https URLs so a fresh machine without SSH
+# keys can still clone.
+#
+# YouCompleteMe is NOT here: it needs recursive submodules and a
+# per-machine native build. See run_onchange_setup-vim.sh.
+
+[".vim/pack/vendor/start/nerdtree"]
+    type = "git-repo"
+    url = "https://github.com/preservim/nerdtree.git"
+    refreshPeriod = "168h"
+
+[".vim/pack/vendor/start/fzf"]
+    type = "git-repo"
+    url = "https://github.com/junegunn/fzf.vim.git"
+    refreshPeriod = "168h"
+
+[".vim/pack/vendor/start/gruvbox"]
+    type = "git-repo"
+    url = "https://github.com/morhetz/gruvbox.git"
+    refreshPeriod = "168h"

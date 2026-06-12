@@ -1,0 +1,21 @@
+# Loancrate — repo root session inside a task worktree. No pnpm dev
+# window by default; with worktree isolation enabled (pnpm
+# worktree:enable), run pnpm dev in the shell window for this
+# worktree's own isolated stack (own DB/ports/prefixes).
+# Start with the `dev <task>` zsh alias, which creates the worktree
+# and passes its path:
+#   tmuxinator start devtree task=<task> workdir=<worktree-path>
+name: dev-<%= @settings["task"] %>
+root: <%= @settings["workdir"] %>
+
+# Top (main) pane gets 40% height; bottom gets the remaining 60%.
+on_project_start: tmux set-option -g main-pane-height 40%
+
+windows:
+  - code:
+      layout: main-horizontal
+      panes:
+        - vim
+        - claude
+  - shell:
+  - git: git status

@@ -1,0 +1,17 @@
+# Loancrate — repo root session on the main checkout; owns the dev
+# stack (pnpm dev), which can only run once (shared docker + ports)
+# Start with:  tmuxinator start devroot   (or the naked `dev` zsh alias)
+name: devroot
+root: /Users/felipespinolo/Development/loancrate
+
+# Top (main) pane gets 40% height; bottom gets the remaining 60%.
+on_project_start: tmux set-option -g main-pane-height 40%
+
+windows:
+  - code:
+      layout: main-horizontal
+      panes:
+        - vim
+        - claude
+  - dev: pnpm dev
+  - git: git status

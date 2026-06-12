@@ -1,0 +1,19 @@
+# Loancrate — single-package session under packages/<name> inside a
+# task worktree
+# Start with the `dev <task> <pkgname>` zsh alias, which creates the
+# worktree and passes its path:
+#   tmuxinator start devpkg <pkgname> task=<task> workdir=<worktree-path>
+name: dev-<%= @settings["task"] %>-<%= @args.first %>
+root: <%= @settings["workdir"] %>/packages/<%= @args.first %>
+
+# Top (main) pane gets 40% height; bottom gets the remaining 60%.
+on_project_start: tmux set-option -g main-pane-height 40%
+
+windows:
+  - code:
+      layout: main-horizontal
+      panes:
+        - vim
+        - claude
+  - shell:
+  - git: git status

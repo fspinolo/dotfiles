@@ -1,0 +1,19 @@
+# Loancrate — like devtree, but the Claude pane boots with a handoff
+# brief so a fresh session starts with full context from another one.
+# Started by the `devbrief <task> <brief>` zsh function, which creates
+# the worktree, writes the brief to <worktree>/.handoff.md, and passes:
+#   tmuxinator start devbrief task=<task> workdir=<worktree-path>
+name: dev-<%= @settings["task"] %>
+root: <%= @settings["workdir"] %>
+
+# Top (main) pane gets 40% height; bottom gets the remaining 60%.
+on_project_start: tmux set-option -g main-pane-height 40%
+
+windows:
+  - code:
+      layout: main-horizontal
+      panes:
+        - vim
+        - 'claude --permission-mode plan "Read ./.handoff.md for your full briefing on this task. Study the files and prior work it references, then present a concise plan. You are in plan mode: investigate freely but make no changes."'
+  - shell:
+  - git: git status

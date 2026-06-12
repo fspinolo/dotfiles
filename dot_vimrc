@@ -1,0 +1,55 @@
+set nocompatible
+filetype plugin indent on
+
+syntax on
+set termguicolors
+set background=dark
+set number
+set ruler
+set expandtab
+set tabstop=2
+set shiftwidth=2
+set backspace=indent,eol,start
+set hlsearch
+set incsearch
+set cursorline
+
+" Keep swapfiles out of working directories (// encodes full path in name)
+set directory=~/.vim/swap//
+
+colorscheme gruvbox
+
+" !-- NERDTree --!
+
+" Close vim if nerdtree is the only thing left open
+autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() | quit | endif
+
+" Make the cursor land in the right place depending on if a file was
+" specified. Always open NERDTree for the working directory.
+autocmd StdinReadPre * let s:stad_in=1
+autocmd VimEnter * NERDTree | if argc() > 0 || exists("s:std_in") | wincmd p | endif
+
+" Toggle the pane with Ctrl+t
+nnoremap <C-t> :NERDTreeToggle<CR>
+
+" !-- /NERDTree --!
+
+" !-- FZF --!
+
+" Use the hombebrew fzf install
+set rtp+=/opt/homebrew/opt/fzf
+
+" Ctrl+p for file browser
+nnoremap <C-p> :Files<CR>
+" Ctrl+f for ripgrep
+nnoremap <C-f> :RG<CR>
+
+" !-- /FZF --!
+
+" !-- YCM --!
+
+" Ctrl+j for Jump-to-Definition (GoTo falls back to declaration/references
+" instead of erroring when no definition exists under the cursor)
+nnoremap <C-j> :YcmCompleter GoTo<CR>
+
+" !-- /YCM --!
