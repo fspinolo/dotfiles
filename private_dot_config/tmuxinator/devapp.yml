@@ -8,6 +8,10 @@ root: <%= @settings["workdir"] %>/apps/<%= @args.first %>
 # Top (main) pane gets 40% height; bottom gets the remaining 60%.
 on_project_start: tmux set-option -g main-pane-height 40%
 
+# Focus the claude pane on attach (pane 2 in the code window, since
+# pane-base-index is 1), rather than the default first pane (vim).
+startup_pane: 2
+
 windows:
   - code:
       layout: main-horizontal
