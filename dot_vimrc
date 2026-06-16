@@ -52,4 +52,15 @@ nnoremap <C-f> :RG<CR>
 " instead of erroring when no definition exists under the cursor)
 nnoremap <C-j> :YcmCompleter GoTo<CR>
 
+" Register out-of-tree LSP servers with YCM. bash-language-server is
+" installed globally via npm (see ~/.Brewfile) and started over stdio.
+let g:ycm_language_server =
+  \ [
+  \   {
+  \     'name': 'bash',
+  \     'cmdline': [ 'bash-language-server', 'start' ],
+  \     'filetypes': [ 'sh' ],
+  \   }
+  \ ]
+
 " !-- /YCM --!
