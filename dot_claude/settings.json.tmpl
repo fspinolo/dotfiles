@@ -1,0 +1,67 @@
+{
+  "statusLine": {
+    "type": "command",
+    "command": "sh {{ .chezmoi.homeDir }}/.claude/statusline-command.sh"
+  },
+  "enabledPlugins": {
+    "typescript-lsp@claude-plugins-official": true,
+    "buildkite@claude-plugins-official": true,
+    "sentry@claude-plugins-official": true
+  },
+  "theme": "dark",
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/worktree.sh destroy:*)"
+    ]
+  },
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/tmux-claude-state.sh working",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/tmux-claude-state.sh done",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "permission_prompt|elicitation_dialog",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/tmux-claude-state.sh waiting",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/tmux-claude-state.sh \"\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

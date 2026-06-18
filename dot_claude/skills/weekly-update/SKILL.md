@@ -58,7 +58,10 @@ House style as of June 2026:
 
 ## Step 4: Draft and confirm
 
-- Keep it short — one bullet per work item, not per commit.
+- Keep it short — one bullet per work item, not per commit. Match the
+  length of teammates' posts (typically 4–8 lines): one line per theme,
+  no "why it mattered" clauses, ticket keys instead of explanations,
+  at most a couple of links.
 - Lead with shipped/merged work, then in-review, then non-ticket items
   (pairing, tooling, discussions), then a "next up" line.
 - Credit collaborators by name where natural (reviewer catches, jams).
@@ -67,3 +70,14 @@ House style as of June 2026:
 - Offer to post it: use `slack_send_message_draft` to `#weekly-updates`
   (ID `C0A8SN1S7PD`) so the user can review in Slack before sending.
   Never post directly without the user confirming the final text.
+
+### Slack formatting gotchas (both have bitten before)
+
+- Markdown list syntax does NOT convert — `- ` hyphens post literally.
+  Use literal `•` bullets and `  ◦` sub-bullets, bare URLs, and avoid
+  any markdown that depends on conversion.
+- Broadcast mentions resolve at send time, even from a draft: a naked
+  `@channel`/`@here`/`@everyone` used as a *reference* in the text
+  ("...instead of @channel") will ping the whole channel when sent.
+  Backtick-fence every such occurrence; same for group/user mentions
+  not meant to notify anyone.

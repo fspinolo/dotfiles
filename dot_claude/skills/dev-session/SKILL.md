@@ -1,22 +1,26 @@
 ---
 name: dev-session
-description: Create a dev session (git worktree + tmux) for a task in the loancrate monorepo, optionally seeded from a Linear ticket with a handoff brief. Use when asked to "create/spin up a dev session", "start a session off <ticket>", or "start work on LC-XXXX in a worktree".
+description: Create a dev session (git worktree + tmux) for a task in the loancrate monorepo or another loancrate repo (e.g. infra, datadog-monitoring), optionally seeded from a Linear ticket with a handoff brief. Use when asked to "create/spin up a dev session", "start a session off <ticket>", or "start work on LC-XXXX in a worktree".
 ---
 
 # Create a dev session
 
-Felipe works one task per git worktree at
-`~/Development/loancrate-worktrees/<task>` on branch `felipe/<task>`,
-with a tmux session named `dev-<task>`. The interactive entry points
-are the `dev`/`devbrief` zsh functions in `~/.config/zsh/work.zsh`;
-this skill replicates them non-interactively, plus the Linear and
-handoff-brief bookkeeping. Companion teardown skill:
-`clean-dev-sessions`.
+Felipe works one task per git worktree on branch `felipe/<task>`, with a
+tmux session named `dev-<task>`. The common case is the **monorepo**
+(`~/Development/loancrate-worktrees/<task>`), driven by the `dev`/`devbrief`
+zsh functions in `~/.config/zsh/work.zsh`; this skill replicates them
+non-interactively, plus the Linear and handoff-brief bookkeeping. The same
+conventions extend to **other loancrate repos** (e.g. `infra`,
+`datadog-monitoring`) — only the worktree creation differs (§1). Companion
+teardown skill: `clean-dev-sessions`.
 
 ## 0. Gather inputs
 
 - **Ticket** (optional): if given a Linear URL/key, fetch it with the
   Linear MCP `get_issue` — the description usually defines scope.
+- **Target repo**: the monorepo unless the task clearly lives elsewhere
+  (an `infra`/terraform change, a `datadog-monitoring`/Pulumi change,
+  etc.). Default to monorepo; the work itself usually makes it obvious.
 - **Task name**: short kebab-case, 2–4 words (e.g.
   `temporal-history-archival`), NOT Linear's long `gitBranchName`.
   Derive from the ticket title; confirm only if genuinely ambiguous.
@@ -28,6 +32,8 @@ handoff-brief bookkeeping. Companion teardown skill:
 
 ## 1. Create the worktree
 
+**Monorepo (the common case):**
+
 ```bash
 ~/.local/bin/lc-worktree <task>
 ```
@@ -38,11 +44,33 @@ and runs `pnpm install` (first run takes ~1 min+). It's idempotent.
 Watch its warnings: an existing branch ahead of master is reused
 as-is.
 
+**Another loancrate repo** (`infra`, `datadog-monitoring`, …) — same
+worktree/branch/tmux conventions, but `lc-worktree` is monorepo-only, so
+set it up by hand. The base clone lives at `~/Development/<repo>` and its
+worktrees at `~/Development/<repo>-worktrees/<task>`:
+
+```bash
+repo=infra   # i.e. github.com/loancrate/<repo>
+# clone the base checkout once if it's missing:
+[ -d ~/Development/$repo ] || git clone git@github.com:loancrate/$repo.git ~/Development/$repo
+git -C ~/Development/$repo fetch origin --quiet
+# default branch is usually master — confirm with:
+#   git -C ~/Development/$repo symbolic-ref --short HEAD
+git -C ~/Development/$repo worktree add -b felipe/<task> \
+  ~/Development/$repo-worktrees/<task> origin/master
+```
+
+No `pnpm install` or monorepo bootstrap — these repos bring their own
+tooling (infra = terraform/JSON, datadog-monitoring = Pulumi). Only copy
+gitignored env files if that repo actually uses them.
+
 ## 2. Write the handoff brief (brief-seeded sessions)
 
-Write `<worktree>/.handoff.md`. Make sure `.handoff.md` is listed in
-`~/Development/loancrate/.git/info/exclude` (append if missing —
-worktrees share the main repo's exclude file).
+Write `<worktree>/.handoff.md`. Make sure `.handoff.md` is listed in the
+base clone's exclude file (worktrees share their base repo's exclude) —
+`~/Development/loancrate/.git/info/exclude` for the monorepo, or
+`~/Development/<repo>/.git/info/exclude` for another repo. Append if
+missing.
 
 Brief contents — write for a fresh Claude with zero context:
 
@@ -82,6 +110,9 @@ the attach command).
 
 ### Per-worktree stacks (worktree isolation)
 
+Monorepo only — other repos have their own run story (terraform plan,
+pulumi preview, etc.), so skip this section for them.
+
 Worktree isolation is enabled machine-wide (opted in 2026-06-12 via
 `pnpm worktree:enable`; `scripts/worktree.sh` is the source of
 truth, documented in the repo CLAUDE.md "Worktree isolation"
@@ -117,5 +148,5 @@ If the session is for a ticket: move it to **Eng in Progress**
 
 ## 5. Report
 
-Session name, worktree path, branch, what the brief covers, ticket
-status change, and the attach command.
+Session name, worktree path (and repo, if not the monorepo), branch,
+what the brief covers, ticket status change, and the attach command.

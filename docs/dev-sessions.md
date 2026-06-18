@@ -17,7 +17,7 @@ flight means six sessions, not six rounds of stash/checkout/reset-db.
 
 ## fair warning: this is shaped like my hands
 
-The visible surface of this setup is pure muscle memory — *my* muscle
+The visible surface of this setup is pure muscle memory — _my_ muscle
 memory. Vim sits in the top pane at 40% because that's where my eyes
 go. The bottom pane is where I poke at things. Sessions are named
 `dev-<task>` because my fingers type `tmux a -t dev-` on autopilot
@@ -98,8 +98,47 @@ written down so they actually happen every time.
 
 **`dot_tmux.conf`** → `~/.tmux.conf`
 
-Small but load-bearing for the muscle-memory story: `set-titles` so
-each Warp tab shows its tmux session name.
+More load-bearing than it looks: `set-titles` pushes the session name
+into the Warp tab, and it renders the two at-a-glance state signals
+described below — each is just a tmux user option plus a format
+conditional, no plugins.
+
+**`dot_claude/{settings.json,hooks}`** → `~/.claude/`
+
+`settings.json` wires Claude Code's lifecycle hooks (and the status
+line); `hooks/tmux-claude-state.sh` is the fire-and-forget script they
+call to reflect Claude's live state into the session. It's kept as a
+chezmoi template so the absolute hook paths track `{{ .chezmoi.homeDir }}`
+across machines.
+
+## seeing state at a glance
+
+Six sessions in flight is only useful if I can tell what each one is
+doing without attaching. Two independent signals ride along in the
+session switcher (`prefix + s`) and the status bar:
+
+**Workflow phase** — a colored dot _before_ the session name: green =
+actively working, yellow = up for review, magenta = experimental /
+planning. The `dev*` tmuxinator templates set it automatically (a
+worktree session starts green, a `devbrief` planning session starts
+magenta), and prefix keys flip it by hand (`C-a` active, `C-p` review,
+`C-e` experimental, `C-d` clear). It's the `@state` user option.
+
+**Live Claude state** — a glyph _after_ the name, driven by Claude
+Code's lifecycle hooks: cyan `…` while it's working, red `!` when it's
+blocked waiting on me to approve something, green `✓` when the turn
+finishes. So in a list of sessions I can see which one is sitting on a
+permission prompt versus grinding versus done. The hooks shell out to
+`tmux-claude-state.sh`, which sets the `@claude` user option; no-op
+outside tmux, so it's free when I'm not in a session.
+
+One gotcha worth stealing the fix for: tmuxinator's `on_project_start`
+runs _before_ the session exists, so setting a per-session option there
+silently no-ops — the templates defer it to a tiny backgrounded waiter
+that fires once the session is created.
+
+Both signals are just user options + format conditionals, so the same
+trick renders anything you can compute per session.
 
 ## the stack part (lives in the monorepo, not here)
 

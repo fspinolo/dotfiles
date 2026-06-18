@@ -7,7 +7,11 @@ name: dev-<%= @settings["task"] %>-<%= @args.first %>
 root: <%= @settings["workdir"] %>/packages/<%= @args.first %>
 
 # Top (main) pane gets 40% height; bottom gets the remaining 60%.
-on_project_start: tmux set-option -g main-pane-height 40%
+# Mark a work session active (green dot in the switcher and status bar).
+# on_project_start runs BEFORE tmux creates the session, so a -t set
+# would no-op; defer it to a backgrounded waiter that fires once the
+# session exists.
+on_project_start: tmux set-option -g main-pane-height 40%; { until tmux has-session -t dev-<%= @settings["task"] %>-<%= @args.first %> 2>/dev/null; do sleep 0.05; done; tmux set-option -t dev-<%= @settings["task"] %>-<%= @args.first %> @state active; } &
 
 # Focus the claude pane on attach (pane 2 in the code window, since
 # pane-base-index is 1), rather than the default first pane (vim).
