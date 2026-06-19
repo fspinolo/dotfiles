@@ -113,32 +113,30 @@ across machines.
 
 ## seeing state at a glance
 
-Six sessions in flight is only useful if I can tell what each one is
-doing without attaching. Two independent signals ride along in the
-session switcher (`prefix + s`) and the status bar:
+Six sessions in flight is only useful if I can tell which one wants me
+without attaching. Guiding rule: **clean = silent; any mark means "pay
+attention."** Two independent signals ride along in the session switcher
+(`prefix + s`) and the status bar:
 
 **Workflow phase** — a colored dot _before_ the session name: green =
-actively working, yellow = up for review, magenta = experimental /
-planning. The `dev*` tmuxinator templates set it automatically (a
-worktree session starts green, a `devbrief` planning session starts
-magenta), and prefix keys flip it by hand (`C-a` active, `C-p` review,
-`C-e` experimental, `C-d` clear). It's the `@state` user option.
+active, yellow = up for review, magenta = experimental. Set by hand only
+(`C-a` active, `C-p` review, `C-e` experimental, `C-d` clear) — a
+deliberate mark. I tried auto-setting it per session type and ripped it
+out: it just rotted to "active" on everything and meant nothing. It's
+the `@state` user option.
 
 **Live Claude state** — a glyph _after_ the name, driven by Claude
-Code's lifecycle hooks: cyan `…` while it's working, red `!` when it's
-blocked waiting on me to approve something, green `✓` when the turn
-finishes. So in a list of sessions I can see which one is sitting on a
-permission prompt versus grinding versus done. The hooks shell out to
+Code's lifecycle hooks, and deliberately just two states that matter:
+cyan `▶` while it's working, red `!` when it's blocked waiting on me to
+approve something. A finished or idle session shows **nothing** — so a
+glyph always means "this one needs me." (Earlier I had a green `✓` for
+"done" too, but since that's the resting state between turns it was just
+noise, so `Stop` now clears the glyph instead.) The hooks shell out to
 `tmux-claude-state.sh`, which sets the `@claude` user option; no-op
 outside tmux, so it's free when I'm not in a session.
 
-One gotcha worth stealing the fix for: tmuxinator's `on_project_start`
-runs _before_ the session exists, so setting a per-session option there
-silently no-ops — the templates defer it to a tiny backgrounded waiter
-that fires once the session is created.
-
-Both signals are just user options + format conditionals, so the same
-trick renders anything you can compute per session.
+Both signals are just tmux user options + format conditionals, so the
+same trick renders anything you can compute per session.
 
 ## the stack part (lives in the monorepo, not here)
 
