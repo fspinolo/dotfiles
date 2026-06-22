@@ -64,3 +64,41 @@ let g:ycm_language_server =
   \ ]
 
 " !-- /YCM --!
+
+" !-- Git review --!
+
+" Base to diff a dev-session branch against: the merge-base with
+" origin/master, so :Review shows everything this branch changed
+" (committed and uncommitted), not commits that landed on master since.
+function! s:ReviewBase() abort
+  let l:base = systemlist('git merge-base origin/master HEAD')
+  return (v:shell_error || empty(l:base)) ? 'origin/master' : l:base[0]
+endfunction
+
+" :Review            whole-branch diff vs the merge-base, read-only
+" :Review --staged   (or any other `git diff` args) passed straight through
+function! s:Review(args) abort
+  let l:spec = empty(a:args) ? shellescape(s:ReviewBase()) : a:args
+  let l:diff = system('git diff ' . l:spec)
+  if v:shell_error && empty(l:diff)
+    echohl ErrorMsg | echo 'Review: git diff failed' | echohl None
+    return
+  endif
+  if empty(trim(l:diff))
+    echo 'Review: no changes'
+    return
+  endif
+  enew
+  setlocal buftype=nofile bufhidden=wipe noswapfile nobuflisted filetype=diff
+  call setline(1, split(l:diff, "\n"))
+  setlocal nomodifiable
+  normal! gg
+endfunction
+
+command! -nargs=? Review call s:Review(<q-args>)
+
+" Quick whole-diff read; deep review via fugitive's status window.
+nnoremap <leader>gd :Review<CR>
+nnoremap <leader>gs :Git<CR>
+
+" !-- /Git review --!
