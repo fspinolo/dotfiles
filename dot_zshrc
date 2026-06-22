@@ -118,6 +118,9 @@ export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export PATH="$HOME/.local/bin:$PATH"
 
+# Render a Markdown file to HTML and open it in a new browser tab.
+alias mdv='mdview'
+
 # Machine-specific shell config (e.g. work dev-session helpers).
 # Managed by chezmoi; only present on machines where it applies.
 [[ -f ~/.config/zsh/work.zsh ]] && source ~/.config/zsh/work.zsh
