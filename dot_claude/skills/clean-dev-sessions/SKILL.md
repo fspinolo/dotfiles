@@ -11,6 +11,19 @@ When the task's PR merges, the session, worktree, and branch linger.
 This skill identifies the stale ones, verifies they're safe to remove,
 and cleans them up.
 
+## Background by default (non-blocking)
+
+**Always** run this in the background — dispatch a background subagent
+(`Agent`, `subagent_type: "general-purpose"`, `run_in_background: true`)
+to do the inventory, assessment, and cleanup (§1–§5), so Felipe keeps
+working while it runs. The harness notifies on completion; relay the
+agent's keep/remove report then. The prompt must be self-contained:
+tell it to read and follow this skill
+(`~/.claude/skills/clean-dev-sessions/SKILL.md`) end to end. Only run
+inline if Felipe explicitly asks to do it in the foreground. (Note:
+`clean-current-session` is the opposite — it must NEVER background,
+since it tears down the session this process runs inside.)
+
 ## Never touch
 
 - `devroot` — the main-checkout session running the `pnpm dev` stack.

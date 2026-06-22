@@ -14,6 +14,44 @@ conventions extend to **other loancrate repos** (e.g. `infra`,
 `datadog-monitoring`) — only the worktree creation differs (§1). Companion
 teardown skill: `clean-dev-sessions`.
 
+## Background by default (non-blocking)
+
+**Always** create the session in the background — never run §1–§5 inline.
+They hold up the conversation (the `lc-worktree` install alone is ~1 min),
+and Felipe wants to keep working while it spins up. The only exception is
+if he explicitly says to do it inline / in the foreground / "wait for it".
+Proceed:
+
+1. **Inline, in this conversation** (these need the live context): do §0
+   (gather inputs — fetch the ticket, settle the task name) and draft the
+   full brief text (§2), since this project's memory and the current
+   chat don't follow into a subagent.
+2. **Delegate the mechanical rest** to a background subagent:
+
+   ```
+   Agent(
+     subagent_type: "general-purpose",
+     run_in_background: true,
+     description: "spin up dev session <task>",
+     prompt: <<everything the agent needs, self-contained>>
+   )
+   ```
+
+   The prompt must be self-contained: tell it to read and follow
+   `~/.claude/skills/dev-session/SKILL.md` §1, §3, §4, §5, plus the
+   already-decided task name, target repo, session flavor, the verbatim
+   brief text to write to `<worktree>/.handoff.md`, and the ticket
+   key/URL + the Linear status move. It has no access to this chat, so
+   inline every fact.
+3. Report the background task id and the eventual attach command
+   (`tmux a -t dev-<task>`), then return control. The harness notifies
+   you when the subagent finishes.
+
+The same pattern applies to the teardown skills (`clean-dev-sessions`,
+`clean-current-session`) — except `clean-current-session`, which must
+NOT background-delegate, since it tears down the session/worktree this
+process is running inside.
+
 ## 0. Gather inputs
 
 - **Ticket** (optional): if given a Linear URL/key, fetch it with the

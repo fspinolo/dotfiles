@@ -49,15 +49,40 @@ details behind each check.
 git status --porcelain                # only stray/ignored files → ok
 git rev-list --count @{u}..HEAD       # >0 unpushed → keep
 gh pr view <n> --json state --jq .state   # want MERGED
-ls ~/.vim/swap/ | grep -i '<task-or-path>'  # match → possible UNSAVED buffer
+
+# Vim swap: existence ≠ unsaved work (a .swp exists for ANY open buffer,
+# including a read-only view). Decide on vim's own dirty flag, not the
+# match. For each matching swap, b0_dirty lives at offset 1007 of the
+# classic-vim swap header: 0x55 = buffer modified (unsaved), else clean.
+for swp in ~/.vim/swap/*<task-or-path>*; do
+  [ -e "$swp" ] || continue
+  if [ "$(xxd -s 2 -l 4 -p "$swp" 2>/dev/null)" != "56494d20" ]; then
+    echo "NON-CLASSIC swap (neovim?/unknown) → surface: $swp"; continue
+  fi
+  case "$(xxd -s 1007 -l 1 -p "$swp" 2>/dev/null)" in
+    55) echo "DIRTY (unsaved edits) → keep + surface: $swp" ;;
+    *)  echo "clean view (safe to discard): $swp" ;;
+  esac
+done
 ```
 
 **Vim swap file caveat:** the session's vim pane may hold an unsaved
-buffer. A matching swap file in `~/.vim/swap/` means killing the session
-could lose edits. You're often the one who made the file changes via
-tools (not vim), so the swap is usually just a stale view of the
-now-merged file — but you can't tell from here. **Surface it to the user
-and get an explicit go-ahead** before proceeding when a swap matches.
+buffer, and killing the session would lose it. But a swap file existing
+only means a buffer is *open* — opening a file just to read it (e.g.
+reviewing a merged change) leaves an identical `.swp`, so blocking on the
+mere match is a false positive most of the time. The dirty flag above is
+the real signal, and it's exact (verified against VIM 9.2: `0x55` when
+modified, `0x00` for a clean view):
+
+- **Any swap reads `DIRTY` (0x55), or `git status` shows the swapped path
+  modified** → real unsaved work. Keep the session, surface it, get an
+  explicit go-ahead.
+- **All matches read clean** → vim just has the file open for viewing.
+  Proceed; mention in the final report that a vim pane had `<file>` open
+  (read-only) so the user has the ~30s kill window to object if that's
+  somehow wrong.
+- **A swap isn't classic-vim format** (neovim, or the header check fails)
+  → can't read the flag; fall back to surfacing and asking.
 
 ## 3. Do everything survivable first
 
