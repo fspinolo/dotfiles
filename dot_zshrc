@@ -121,6 +121,20 @@ export PATH="$HOME/.local/bin:$PATH"
 # Render a Markdown file to HTML and open it in a new browser tab.
 alias mdv='mdview'
 
+# Personal idea vault (private repo fspinolo/ideas). Capture a raw idea from
+# anywhere; `ideas` lists the open backlog. See the repo README for the
+# status:/trigger: label convention.
+idea() { gh issue create -R fspinolo/ideas -t "$*" -l status:raw; }
+alias ideas='gh issue list -R fspinolo/ideas --state open'
+
 # Machine-specific shell config (e.g. work dev-session helpers).
 # Managed by chezmoi; only present on machines where it applies.
 [[ -f ~/.config/zsh/work.zsh ]] && source ~/.config/zsh/work.zsh
+
+# Disable the macOS press-and-hold accent popover so a held key repeats
+# instead of opening the accent menu — both globally and in Warp's own
+# defaults domain. Takes effect after the reading app is restarted.
+if [[ "$OSTYPE" == darwin* ]]; then
+  defaults write -g ApplePressAndHoldEnabled -bool false
+  defaults write dev.warp.Warp ApplePressAndHoldEnabled -bool false
+fi
