@@ -84,17 +84,53 @@ This is how a long-running session spins off a scoped follow-up
 without losing context: the old session writes the brief, the new one
 wakes up already knowing the plan, the ticket, and the prior work.
 
-**`dot_claude/skills/{dev-session,clean-dev-sessions}`** →
+That per-worktree settings file turned out to be the training wheels:
+the durable version is a read-only allowlist in the **user-level**
+`~/.claude/settings.json` (see `dot_claude/settings.json.tmpl`), which
+covers every worktree and every repo without per-session setup. Mine
+was built empirically — grep your session transcripts
+(`~/.claude/projects/*/`) for the tools sessions actually use, allow
+the read-only ones plus your build/test toolchain, keep anything
+outward-facing (Slack sends, PR creation, deploys) prompting. Worth
+doing once; it removed most of the stalls the local file papered over.
+
+Gotcha that arrives with a checked-in repo `.claude/settings.json`:
+the **first** Claude launch in each fresh worktree stops at a
+folder-trust prompt (it's a per-directory trust decision about the
+repo's settings + hooks — no allowlist can pre-grant it). One
+keystroke when you're driving; when a background agent does the
+spin-up, have it detect the prompt and report back instead of
+guessing at it.
+
+**`dot_claude/skills/{dev-session,clean-dev-sessions,clean-current-session,enable-remote-control}`** →
 `~/.claude/skills/`
 
 The same flows, packaged as Claude Code skills, so I can say "spin up
 a session off LC-1234" and Claude does the whole dance: fetches the
 Linear ticket, picks a task name, runs `lc-worktree`, writes the
 handoff brief, starts the tmux session, and moves the ticket to in
-progress. `clean-dev-sessions` is the reverse: it sweeps stale
+progress — in the background, so the conversation that asked for it
+keeps moving. `clean-dev-sessions` is the reverse: it sweeps stale
 sessions after PRs merge, with the paranoid checks (dirty trees,
 unpushed commits, open vim swap files, squash-merge verification)
 written down so they actually happen every time.
+`clean-current-session` is the same teardown for the session you're
+_currently inside_ — sequenced so it doesn't kill its own process
+mid-cleanup (and, unlike everything else here, never backgrounded).
+
+**`enable-remote-control` — drive any session from your phone**
+
+Claude Code's remote control is off by default and per-session, so
+`dev-*` sessions boot without it. This skill flips it on for a running
+session by sending `/remote-control` into the Claude pane over tmux —
+no attach needed — and returns the `claude.ai/code` URL to drive that
+session from a browser or the mobile app. When spinning up a session I
+know I'll steer remotely, the spin-up folds this in so the join link
+comes back in one pass. Two hard-won notes are written into the skill:
+a "stuck" remote session is almost always a stale browser client
+(refresh the tab before suspecting the session), and if you lose the
+tab, `/rc` on an already-active session opens a panel showing the URL —
+it's not a toggle, so it's safe to recover the link that way.
 
 **`dot_tmux.conf`** → `~/.tmux.conf`
 

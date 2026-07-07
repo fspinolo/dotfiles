@@ -11,10 +11,119 @@
   "theme": "dark",
   "permissions": {
     "allow": [
-      "Bash(./scripts/worktree.sh destroy:*)"
+      "Bash(./scripts/worktree.sh destroy:*)",
+      "Bash(git fetch:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git status:*)",
+      "Bash(git branch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git remote:*)",
+      "Bash(git worktree list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh api:*)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(find:*)",
+      "Bash(ls:*)",
+      "Bash(cat:*)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(echo:*)",
+      "Bash(which:*)",
+      "Bash(jq:*)",
+      "Bash(diff:*)",
+      "Bash(sed -n:*)",
+      "Bash(npx turbo run:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npx tsc:*)",
+      "Bash(pnpm install)",
+      "Bash(pnpm run build:*)",
+      "Bash(pnpm test:*)",
+      "Bash(bk build list:*)",
+      "Bash(bk build view:*)",
+      "Bash(bk job log:*)",
+      "Bash(tmux list-sessions:*)",
+      "Bash(tmux list-panes:*)",
+      "Bash(tmux capture-pane:*)",
+      "Bash(tmux has-session:*)",
+      "mcp__claude_ai_Linear__get_issue",
+      "mcp__claude_ai_Linear__list_issues",
+      "mcp__claude_ai_Linear__get_project",
+      "mcp__claude_ai_Linear__list_projects",
+      "mcp__claude_ai_Linear__list_comments",
+      "mcp__claude_ai_Linear__list_teams",
+      "mcp__claude_ai_Linear__list_issue_statuses",
+      "mcp__claude_ai_Linear__list_users",
+      "mcp__claude_ai_Linear__save_issue",
+      "mcp__claude_ai_Linear__save_comment",
+      "mcp__claude_ai_Datadog__get_datadog_metric",
+      "mcp__claude_ai_Datadog__get_datadog_metric_context",
+      "mcp__claude_ai_Datadog__search_datadog_metrics",
+      "mcp__claude_ai_Datadog__search_datadog_monitors",
+      "mcp__claude_ai_Datadog__search_datadog_logs",
+      "mcp__claude_ai_Datadog__analyze_datadog_logs",
+      "mcp__claude_ai_Datadog__aggregate_spans",
+      "mcp__claude_ai_Datadog__search_datadog_spans",
+      "mcp__claude_ai_Datadog__get_datadog_notebook",
+      "mcp__claude_ai_Datadog__get_datadog_dashboard",
+      "mcp__claude_ai_Datadog__search_datadog_dashboards",
+      "mcp__claude_ai_Datadog__get_widget",
+      "mcp__claude_ai_Datadog__list_datadog_skills",
+      "mcp__claude_ai_Datadog__load_datadog_skill",
+      "mcp__unblocked__context_research",
+      "mcp__unblocked__context_get_urls",
+      "mcp__claude_ai_Slack__slack_read_channel",
+      "mcp__claude_ai_Slack__slack_read_thread",
+      "mcp__claude_ai_Slack__slack_search_public",
+      "mcp__claude_ai_Slack__slack_search_public_and_private",
+      "mcp__claude_ai_Slack__slack_search_channels",
+      "mcp__claude_ai_Slack__slack_search_users",
+      "mcp__claude_ai_Notion__notion-fetch",
+      "mcp__claude_ai_Notion__notion-search"
     ]
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/claude-commit-review.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/tmux-claude-state.sh working",
+            "timeout": 5
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.claude/hooks/claude-live-diff.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "matcher": "",
