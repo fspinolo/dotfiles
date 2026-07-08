@@ -174,6 +174,52 @@ outside tmux, so it's free when I'm not in a session.
 Both signals are just tmux user options + format conditionals, so the
 same trick renders anything you can compute per session.
 
+## the quiet superpower: sessions are an API
+
+Everything above treats tmux as a _layout_ tool. The emergent stuff —
+the parts of this setup that surprised me — comes from treating it as
+an **API**: every session is an addressable object that any process
+can read (`capture-pane`) and drive (`send-keys`) without a human
+attached. Once each session hosts an agent, that turns the whole
+constellation into something programmable. Things that just fall out,
+all of which I actually do:
+
+- **One agent steers another.** A session can hand a _running_
+  sibling new scope mid-flight: write a context file into its
+  worktree, `send-keys` a one-line "read this" nudge, done. No
+  restart, no lost state. During an incident this week, live triage
+  findings went from the session I was talking to into the RCA
+  session that owned the investigation, while it was working.
+- **Capabilities can be flipped on after the fact.** Claude Code's
+  remote control is per-session and off by default; a tiny skill
+  sends `/remote-control` into any session's Claude pane and scrapes
+  the join URL back out of `capture-pane` — so any local session
+  becomes phone-driveable on demand, including ones started days ago.
+- **Spin-up can be delegated safely.** A background agent creates the
+  worktree, boots the session, and — because it can _read_ the pane —
+  notices when the new Claude is stuck at a first-launch trust prompt
+  and reports back instead of guessing. Reading state before sending
+  keys is the whole discipline.
+- **Status without attaching.** The same `capture-pane` that powers
+  the above also answers "what is that session doing?" from anywhere
+  — which is what the status glyphs render passively, and what lets
+  me ask one session to go check on another.
+
+The craft caveat that makes this safe rather than chaotic: a pane is
+a shared input box. Whatever's focused gets your keystrokes — a
+permission prompt, a dialog, a half-typed composer — so **capture
+first, send second**, and never let automation answer a prompt that's
+a human's to answer. (Two empirical quirks worth knowing: a session
+being driven remotely sometimes needs a second Enter before a locally
+sent message submits, and `/rc` on an already-remote-controlled
+session opens an info panel with the join URL — it doesn't toggle
+anything off, so it's the safe way to recover a lost link.)
+
+None of this is tmux-exclusive — anything with a scriptable
+read/write interface to sessions could do it. But tmux gives it to
+you for free, and it's the difference between "six terminals" and
+"six coworkers you can message."
+
 ## the stack part (lives in the monorepo, not here)
 
 Per-worktree isolated `pnpm dev` is the monorepo's worktree-isolation
