@@ -1,7 +1,7 @@
 # Personal dev sessions (tmuxinator) — self-contained sibling of the
 # loancrate version in work.zsh; chezmoi applies exactly one of the two
 # per machine (see .chezmoiignore).
-# dev                 -> fzf picker over ~/Development
+# dev                 -> fzf picker over the project roots
 # dev <name> [<sub>]  -> session dev-<name>[-<sub>] rooted at the
 #                        project (or its <sub> subdirectory); names
 #                        resolve by exact match, then unique prefix
@@ -17,28 +17,44 @@
 #                        session is already running picks a free name
 #                        (dev-<name>-2, -3, ...).
 
-# Resolve (and canonicalize) a project name under ~/Development; print
+# Directories whose children are projects, in priority order (an exact
+# name match in an earlier root wins over one in a later root).
+_dev_roots=("$HOME/Development" "$HOME/pool")
+
+# Print every project directory across the roots, one per line.
+_dev_projects() {
+  local root
+  for root in "${_dev_roots[@]}"; do
+    [[ -d "$root" ]] && print -rl -- "$root"/*(N/)
+  done
+  return 0
+}
+
+# Resolve (and canonicalize) a project name across the roots; print
 # "<canonical-name>\t<dir>".
 _dev_workdir() {
-  local dev_dir="$HOME/Development"
   local name="$1"
-  local dir="$dev_dir/$name"
-  if [[ ! -d "$dir" ]]; then
-    local -a matches
-    matches=("$dev_dir/$name"*(N/))
-    if (( ${#matches} == 1 )); then
-      dir="${matches[1]}"
-      name="${dir:t}"
-    elif (( ${#matches} > 1 )); then
-      echo "dev: ambiguous project name: $name" >&2
-      print -rl -- ${matches:t} >&2
-      return 1
-    else
-      echo "dev: no such project: $name" >&2
-      echo "available projects:" >&2
-      print -rl -- "$dev_dir"/*(N/:t) >&2
-      return 1
-    fi
+  local -a projects exact prefix
+  local p dir
+  projects=(${(f)"$(_dev_projects)"})
+  for p in "${projects[@]}"; do
+    [[ "${p:t}" == "$name" ]] && exact+=("$p")
+    [[ "${p:t}" == "$name"* ]] && prefix+=("$p")
+  done
+  if (( ${#exact} )); then
+    dir="${exact[1]}"
+  elif (( ${#prefix} == 1 )); then
+    dir="${prefix[1]}"
+    name="${dir:t}"
+  elif (( ${#prefix} > 1 )); then
+    echo "dev: ambiguous project name: $name" >&2
+    print -rl -- "${(@)prefix#$HOME/}" >&2
+    return 1
+  else
+    echo "dev: no such project: $name" >&2
+    echo "available projects:" >&2
+    print -rl -- "${(@)projects#$HOME/}" >&2
+    return 1
   fi
   if [[ -n "$2" ]]; then
     if [[ -d "$dir/$2" ]]; then
@@ -53,9 +69,9 @@ _dev_workdir() {
 
 dev() {
   if [[ -z "$1" ]]; then
-    local name
-    name=$(print -rl -- "$HOME"/Development/*(N/:t) | fzf) || return
-    dev "$name"
+    local pick
+    pick=$(_dev_projects | sed "s|^$HOME/||" | fzf) || return
+    dev "${pick:t}"
     return
   fi
   if [[ "$1" == "rm" ]]; then
