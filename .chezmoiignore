@@ -14,9 +14,20 @@ docs
 # Work-only files: applied only when machine == "work".
 # Still committed to the repo (backed up), just not written out elsewhere.
 {{ if ne .machine "work" }}
-.config/tmuxinator
+.config/tmuxinator/devapp.yml
+.config/tmuxinator/devbrief.yml
+.config/tmuxinator/devpkg.yml
+.config/tmuxinator/devroot.yml
+.config/tmuxinator/devtree.yml
 .config/zsh/work.zsh
 .claude/skills/clean-dev-sessions
 .claude/skills/dev-session
 .claude/skills/weekly-update
+{{ end }}
+
+# Personal-only files: the dev-session functions in dev-personal.zsh
+# would collide with work.zsh's, and dev.yml is only driven by them.
+{{ if eq .machine "work" }}
+.config/tmuxinator/dev.yml
+.config/zsh/dev-personal.zsh
 {{ end }}

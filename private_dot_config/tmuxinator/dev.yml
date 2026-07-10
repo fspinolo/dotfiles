@@ -1,0 +1,30 @@
+# Personal dev-session template, driven by the dev()/devbrief() zsh
+# functions in ~/.config/zsh/dev-personal.zsh (the work machine uses
+# the per-purpose devroot/devtree/devapp/devpkg/devbrief configs
+# instead). Settings:
+#   session    tmux session name (required)
+#   workdir    session root (required)
+#   brief      if set, the claude pane boots in plan mode reading the
+#              handoff brief at <workdir>/.handoff.md
+name: <%= @settings["session"] %>
+root: <%= @settings["workdir"] %>
+
+# Top (main) pane gets 60% height; bottom gets the remaining 40%.
+on_project_start: tmux set-option -g main-pane-height 60%
+
+# Focus the claude pane on attach (pane 2 in the code window, since
+# pane-base-index is 1), rather than the default first pane (vim).
+startup_pane: 2
+
+windows:
+  - code:
+      layout: main-horizontal
+      panes:
+        - vim
+<% if @settings["brief"] %>
+        - 'claude --permission-mode plan "Read ./.handoff.md for your full briefing on this task. Study the files and prior work it references, then present a concise plan. You are in plan mode: investigate freely but make no changes."'
+<% else %>
+        - claude
+<% end %>
+  - shell:
+  - git: git status

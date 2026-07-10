@@ -127,9 +127,11 @@ alias mdv='mdview'
 idea() { gh issue create -R fspinolo/ideas -t "$*" -l status:raw; }
 alias ideas='gh issue list -R fspinolo/ideas --state open'
 
-# Machine-specific shell config (e.g. work dev-session helpers).
-# Managed by chezmoi; only present on machines where it applies.
+# Machine-specific shell config (dev-session helpers — work and
+# personal variants). Managed by chezmoi; exactly one is present per
+# machine (see .chezmoiignore).
 [[ -f ~/.config/zsh/work.zsh ]] && source ~/.config/zsh/work.zsh
+[[ -f ~/.config/zsh/dev-personal.zsh ]] && source ~/.config/zsh/dev-personal.zsh
 
 # Disable the macOS press-and-hold accent popover so a held key repeats
 # instead of opening the accent menu — both globally and in Warp's own
