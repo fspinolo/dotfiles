@@ -14,6 +14,12 @@ docs
 # Work-only files: applied only when machine == "work".
 # Still committed to the repo (backed up), just not written out elsewhere.
 {{ if ne .machine "work" }}
+# settings.json is auto-mutated local state (permission approvals, model
+# choice) and this snapshot is the work machine's — its allowlist, MCP
+# grants, and hooks (two of which reference scripts not in this repo)
+# would clobber the personal machine's live config. The work machine
+# keeps managing it as a backup; other machines keep their own.
+.claude/settings.json
 .config/tmuxinator/devapp.yml
 .config/tmuxinator/devbrief.yml
 .config/tmuxinator/devpkg.yml
