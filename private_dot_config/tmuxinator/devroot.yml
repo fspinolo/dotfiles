@@ -4,18 +4,17 @@
 name: devroot
 root: /Users/felipespinolo/Development/loancrate
 
-# Top (main) pane gets 40% height; bottom gets the remaining 60%.
-on_project_start: tmux set-option -g main-pane-height 40%
+# Main (claude) pane on the left gets 50% width; vim takes the rest.
+on_project_start: tmux set-option -g main-pane-width 50%
 
-# Focus the claude pane on attach (pane 2 in the code window, since
-# pane-base-index is 1), rather than the default first pane (vim).
-startup_pane: 2
+# claude is the main pane (pane 1, left) and is focused on attach.
+startup_pane: 1
 
 windows:
   - code:
-      layout: main-horizontal
+      layout: main-vertical
       panes:
-        - vim
         - claude
+        - vim
   - dev: pnpm dev
   - git: git status
